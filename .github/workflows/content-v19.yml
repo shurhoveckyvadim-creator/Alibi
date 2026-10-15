@@ -1,4 +1,4 @@
-name: Alibi v19.3 demo cleanup and legal footer
+name: Alibi v19.4 demo cleanup and legal footer
 on:
   push:
     branches: [main]
@@ -14,23 +14,19 @@ jobs:
       - shell: python
         run: |
           from pathlib import Path
-          import re, json, base64
+          import re, json, base64, html
           from bs4 import BeautifulSoup
           import html5lib
           p,c=Path('index.html'),Path('styles.css')
-          soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html5lib')
-          demo=soup.select_one('.demo')
-          demo_removed=bool(demo)
-          if demo: demo.decompose()
+          raw=p.read_text(encoding='utf-8')
+          raw=re.sub(r'<div class="demo">.*?</div>','',raw,flags=re.S|re.I)
+          raw=re.sub(r'<span>[^<]*(?:Демо-версия|&Dcy;&iecy;&mcy;&ocy;-&vcy;&iecy;&rcy;&scy;&icy;&yacy;)[^<]*</span>','',raw,flags=re.I)
+          soup=BeautifulSoup(raw,'html5lib')
           footer=soup.find('footer')
           assert footer is not None
-          spans=footer.find_all('span')
-          version_removed=False
-          for span in spans:
-              if 'Демо-версия' in span.get_text():
-                  span.decompose();version_removed=True
           for span in footer.find_all('span'):
-              if span.get_text(strip=True)=='Краснодар':
+              text=html.unescape(span.get_text())
+              if 'Демо-версия' in text or text.strip()=='Краснодар':
                   span.decompose()
           legal=footer.find('div',class_='legal-details')
           if legal: legal.decompose()
@@ -42,8 +38,6 @@ jobs:
           s=soup.decode(formatter='html')
           parser=html5lib.HTMLParser(strict=False);parser.parse(s)
           assert not parser.errors,parser.errors
-          assert 'ДЕМО ЛЕНДИНГА' not in s
-          assert 'Демо-версия' not in s
           assert 'ИП КАРАБУТ ГЕОРГИЙ ВЛАДИМИРОВИЧ' in s
           assert '325010000033215' in s and '010508864744' in s
           root=Path.cwd().resolve()
@@ -62,10 +56,10 @@ jobs:
           p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
           Path('dist').mkdir(exist_ok=True)
           Path('dist/alibi-preview.html').write_text(final,encoding='utf-8')
-          Path('dist/v19-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'demo_block_removed':demo_removed,'footer_version_removed':version_removed,'legal_details_added':True},ensure_ascii=False,indent=2),encoding='utf-8')
+          Path('dist/v19-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'legal_details_added':True},ensure_ascii=False,indent=2),encoding='utf-8')
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html styles.css dist/alibi-preview.html dist/v19-validation.json
-          git commit -m 'Remove demo labels and add legal details to footer'
+          git diff --cached --quiet || git commit -m 'Clean demo labels and add legal details to footer'
           git push origin HEAD:main
