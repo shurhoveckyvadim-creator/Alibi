@@ -1,4 +1,4 @@
-name: Alibi v18 carousel SEO and valid HTML
+name: Alibi v18 repaired
 on:
   push:
     branches: [main]
@@ -6,176 +6,90 @@ on:
 permissions:
   contents: write
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: python -m pip install beautifulsoup4==4.13.4 html5lib==1.1
       - shell: python
         run: |
           from pathlib import Path
-          import re,html,json,base64
+          import re, json, base64
+          from bs4 import BeautifulSoup
+          import html5lib
           p,c=Path('index.html'),Path('styles.css')
-          s,css=p.read_text(encoding='utf-8'),c.read_text(encoding='utf-8')
-          assert '<title>Алиби — демо лендинга · v17</title>' in s
-          assert s.count('class="guest-review"')==6
-          def sub(a,b,n=1):
-              global s
-              assert s.count(a)==n,(a,s.count(a))
-              s=s.replace(a,b)
-          sub('<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#151e38"><title>Алиби — демо лендинга · v17</title><link rel="stylesheet" href="styles.css"></head><body>','''<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#151e38">
-<title>Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн</title>
-<meta name="description" content="Барбершоп Алиби в Краснодаре: мужские стрижки, оформление бороды и комбо. ул. Воронежская, 47/14, ЖК «Фонтаны». Запись онлайн ежедневно с 11:00 до 22:00.">
-<meta name="keywords" content="барбершоп Алиби, барбершоп Краснодар, мужская стрижка Краснодар, оформление бороды, стрижка и борода, ЖК Фонтаны">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Алиби">
-<meta property="og:locale" content="ru_RU">
-<meta property="og:title" content="Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн">
-<meta property="og:description" content="Мужские стрижки, оформление бороды и комбо в барбершопе Алиби. ул. Воронежская, 47/14, ЖК «Фонтаны». Запись онлайн с 11:00 до 22:00.">
-<meta property="og:url" content="https://shurhoveckyvadim-creator.github.io/Alibi/">
-<meta property="og:image" content="https://shurhoveckyvadim-creator.github.io/Alibi/assets/images/logo.png">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Барбершоп Алиби в Краснодаре">
-<meta name="twitter:description" content="Стрижки, борода и комбо. Запись онлайн ежедневно с 11:00 до 22:00.">
-<link rel="canonical" href="https://shurhoveckyvadim-creator.github.io/Alibi/">
-<link rel="icon" href="assets/images/logo.png" type="image/png">
-<link rel="stylesheet" href="styles.css">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BarberShop",
-  "name": "Алиби",
-  "description": "Барбершоп Алиби в Краснодаре: мужские стрижки, оформление бороды и комбо.",
-  "url": "https://shurhoveckyvadim-creator.github.io/Alibi/",
-  "telephone": "+79615252549",
-  "image": "https://shurhoveckyvadim-creator.github.io/Alibi/assets/images/logo.png",
-  "priceRange": "₽₽",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "ул. Воронежская, 47/14, ЖК «Фонтаны»",
-    "addressLocality": "Краснодар",
-    "addressCountry": "RU"
-  },
-  "geo": {"@type": "GeoCoordinates", "latitude": 45.035554, "longitude": 38.975284},
-  "openingHoursSpecification": [{
-    "@type": "OpeningHoursSpecification",
-    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-    "opens": "11:00",
-    "closes": "22:00"
-  }],
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "Услуги барбершопа Алиби",
-    "itemListElement": [
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Мужская стрижка, младший барбер"}, "price": "1000", "priceCurrency": "RUB"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Оформление бороды, младший барбер"}, "price": "500", "priceCurrency": "RUB"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Стрижка и борода, младший барбер"}, "price": "1500", "priceCurrency": "RUB"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Мужская стрижка, старший барбер"}, "price": "1700", "priceCurrency": "RUB"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Оформление бороды, старший барбер"}, "price": "900", "priceCurrency": "RUB"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Стрижка и борода, старший барбер"}, "price": "2600", "priceCurrency": "RUB"}
-    ]
-  }
-}
-</script>
-</head>
-<body>''')
-          sub('<main>','<main id="main">')
-          sub('<div class="guest-reviews" aria-label="Отзывы гостей">','''<div class="reviews-carousel" aria-roledescription="карусель" aria-label="Отзывы гостей">
-<div class="carousel-frame">
-<div class="carousel-track" id="reviewsTrack" tabindex="0">''')
-          old='</div></div><section class="contacts-section"'
-          assert old in s
-          s=s.replace(old,'''</div>
-</div>
-<div class="carousel-controls">
-<button class="carousel-btn" type="button" data-direction="-1" aria-label="Предыдущий отзыв">‹</button>
-<div class="carousel-dots" role="tablist" aria-label="Выбор отзыва"></div>
-<button class="carousel-btn" type="button" data-direction="1" aria-label="Следующий отзыв">›</button>
-</div>
-</div>
-<script>
-(() => {
-  const track=document.getElementById('reviewsTrack');
-  const slides=[...track.children];
-  const dots=document.querySelector('.carousel-dots');
-  let index=0;
-  slides.forEach((slide,i)=>{
-    slide.setAttribute('role','group');
-    slide.setAttribute('aria-roledescription','слайд');
-    slide.setAttribute('aria-label','Отзыв '+(i+1)+' из '+slides.length);
-    const dot=document.createElement('button');
-    dot.type='button';dot.className='carousel-dot';dot.setAttribute('role','tab');
-    dot.setAttribute('aria-label','Показать отзыв '+(i+1));
-    dot.addEventListener('click',()=>go(i));
-    dots.append(dot);
-  });
-  const go=i=>{
-    index=(i+slides.length)%slides.length;
-    track.scrollTo({left:track.clientWidth*index,behavior:'smooth'});
-    [...dots.children].forEach((dot,j)=>dot.setAttribute('aria-selected',String(j===index)));
-  };
-  document.querySelectorAll('.carousel-btn').forEach(button=>button.addEventListener('click',()=>go(index+Number(button.dataset.direction))));
-  track.addEventListener('scroll',()=>{
-    const next=Math.round(track.scrollLeft/track.clientWidth);
-    if(next!==index){index=next;[...dots.children].forEach((dot,j)=>dot.setAttribute('aria-selected',String(j===index)));}
-  },{passive:true});
-  let startX=0;
-  track.addEventListener('pointerdown',event=>{startX=event.clientX;});
-  track.addEventListener('pointerup',event=>{
-    const delta=event.clientX-startX;
-    if(Math.abs(delta)>45)go(index+(delta<0?1:-1));
-  });
-  go(0);
-})();
-</script>
-<section class="contacts-section"''')
-          sub('<div class="demo">ДЕМО ЛЕНДИНГА · ВЕРСИЯ 17</div>','<div class="demo">ДЕМО ЛЕНДИНГА · ВЕРСИЯ 18</div>')
-          sub('<title>Алиби — демо лендинга · v17</title>','<title>Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн</title>')
-          sub('<span>Краснодар · Демо-версия 17</span>','<span>Краснодар · Демо-версия 18</span>')
-          for old,new in [('<div class="wrap nav">','<nav class="wrap nav" aria-label="Основная навигация">'),('</div></header>','</nav></header>'),('<div class="wrap contacts-grid">','<div class="wrap contacts-grid" itemscope itemtype="https://schema.org/BarberShop">'),('<p class="value">Краснодар,<br>ул. Воронежская, 47/14 · ЖК «Фонтаны»</p>','<p class="value" itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="addressLocality">Краснодар</span>,<br><span itemprop="streetAddress">ул. Воронежская, 47/14 · ЖК «Фонтаны»</span></p>'),('<a class="value" href="tel:+79615252549">+7 961 525-25-49</a>','<a class="value" href="tel:+79615252549" itemprop="telephone">+7 961 525-25-49</a>')]:
-              sub(old,new)
-          css+='''
-          /* v18: single review carousel, SEO-ready layout and responsive refinements. */
-          .reviews-carousel{min-width:0;margin-top:32px}
-          .carousel-frame{position:relative;overflow:hidden;border:1px solid #c2a56a44;border-radius:18px;background:#1017291a}
-          .carousel-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
-          .carousel-track::-webkit-scrollbar{display:none}
-          .guest-review{flex:0 0 100%;scroll-snap-align:center;margin:0;padding:clamp(24px,4vw,42px);border:0;background:transparent}
-          .guest-review p{margin:0;font-size:clamp(18px,2.2vw,23px);line-height:1.75;color:#f3f0e8}
-          .carousel-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:18px}
-          .carousel-btn{width:46px;height:46px;border:1px solid #c2a56a66;border-radius:50%;background:transparent;color:#c2a56a;font-size:26px;line-height:1;cursor:pointer;transition:background .2s,border-color .2s}
-          .carousel-btn:hover,.carousel-btn:focus-visible{background:#c2a56a14;border-color:#c2a56a}
-          .carousel-dots{display:flex;gap:9px}
-          .carousel-dot{width:10px;height:10px;padding:0;border:0;border-radius:50%;background:#ffffff33;cursor:pointer;transition:background .2s,transform .2s}
-          .carousel-dot[aria-selected="true"]{background:#c2a56a;transform:scale(1.2)}
-          @media(max-width:760px){.carousel-controls{gap:12px}.carousel-btn{width:42px;height:42px}.guest-review{padding:22px}}
-          @media(max-width:360px){.guest-review{padding:18px}.carousel-btn{width:38px;height:38px;font-size:22px}}
-          @media(prefers-reduced-motion:reduce){.carousel-track{scroll-behavior:auto}.carousel-btn,.carousel-dot{transition:none}}
-          '''
-          assert s.count('class="guest-review"')==6
-          assert 'application/ld+json' in s and 'name="description"' in s and 'carousel-track' in s
-          json.loads(re.search(r'<script type="application/ld\\+json">\\s*(.*?)\\s*</script>',s,re.S).group(1))
-          assert s.count('<section')==4 and s.count('</section>')==4
-          assert s.count('<div')==s.count('</div>')
-          p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
+          soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html5lib')
+          assert 'ВЕРСИЯ 17' in soup.get_text()
+          reviews=soup.select('.guest-review')
+          assert len(reviews)==6
+          soup.title.string='Барбершоп Алиби в Краснодаре — стрижки и борода'
+          description='Мужские стрижки, оформление бороды и комбо в Алиби. Краснодар, ул. Воронежская, 47/14, ЖК «Фонтаны». Часы работы 11:00–22:00. Запись онлайн.'
+          for attrs in [{'name':'description','content':description},{'property':'og:type','content':'website'},{'property':'og:site_name','content':'Алиби'},{'property':'og:locale','content':'ru_RU'},{'property':'og:title','content':soup.title.string},{'property':'og:description','content':description},{'name':'twitter:card','content':'summary'},{'name':'twitter:title','content':soup.title.string},{'name':'twitter:description','content':description}]:
+              soup.head.append(soup.new_tag('meta',attrs=attrs))
+          schema={'@context':'https://schema.org','@type':'HealthAndBeautyBusiness','name':'Алиби','telephone':'+79615252549','address':{'@type':'PostalAddress','streetAddress':'ул. Воронежская, 47/14, ЖК «Фонтаны»','addressLocality':'Краснодар','addressCountry':'RU'},'openingHoursSpecification':[{'@type':'OpeningHoursSpecification','dayOfWeek':['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],'opens':'11:00','closes':'22:00'}]}
+          offers=[]
+          for group in soup.select('.price-group'):
+              for row in group.select('.price-line'):
+                  price=re.sub(r'\D','',row.select_one('.price-amount').get_text())
+                  offers.append({'@type':'Offer','price':price,'priceCurrency':'RUB','itemOffered':{'@type':'Service','name':row.span.get_text()+' — '+group.h3.get_text()}})
+          schema['hasOfferCatalog']={'@type':'OfferCatalog','name':'Услуги Алиби','itemListElement':offers}
+          ld=soup.new_tag('script',attrs={'type':'application/ld+json'})
+          ld.string=json.dumps(schema,ensure_ascii=False)
+          soup.head.append(ld)
+          old=soup.select_one('.guest-reviews')
+          old['class']=['reviews-carousel']
+          old['role']='region'
+          old['aria-roledescription']='карусель'
+          old['aria-label']='Отзывы гостей'
+          for i,review in enumerate(reviews):
+              review['role']='group'
+              review['aria-roledescription']='слайд'
+              review['aria-label']=str(i+1)+' из 6'
+          track=soup.new_tag('div',attrs={'class':'carousel-track','id':'reviewsTrack','tabindex':'0','aria-label':'Листайте отзывы стрелками клавиатуры или свайпом'})
+          for review in reviews: track.append(review.extract())
+          old.append(track)
+          controls=soup.new_tag('div',attrs={'class':'carousel-controls','hidden':''})
+          for direction,label,symbol in [('-1','Предыдущий отзыв','‹'),('1','Следующий отзыв','›')]:
+              button=soup.new_tag('button',attrs={'type':'button','class':'carousel-btn','data-direction':direction,'aria-label':label})
+              button.string=symbol
+              controls.append(button)
+          status=soup.new_tag('span',attrs={'class':'carousel-status','aria-live':'polite','aria-atomic':'true'})
+          status.string='1 / 6'
+          controls.insert(1,status)
+          old.append(controls)
+          js="(()=>{const t=document.getElementById('reviewsTrack'),r=t.closest('.reviews-carousel'),slides=[...t.children],status=r.querySelector('.carousel-status'),motion=matchMedia('(prefers-reduced-motion: reduce)');let index=0;const update=()=>{index=Math.max(0,Math.min(slides.length-1,Math.round(t.scrollLeft/t.clientWidth)));status.textContent=(index+1)+' / '+slides.length;};const go=i=>{index=(i+slides.length)%slides.length;t.scrollTo({left:index*t.clientWidth,behavior:motion.matches?'instant':'smooth'});};r.querySelector('.carousel-controls').hidden=false;r.querySelectorAll('[data-direction]').forEach(b=>b.addEventListener('click',()=>go(index+Number(b.dataset.direction))));t.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();go(index+(e.key==='ArrowRight'?1:-1));}});t.addEventListener('scroll',update,{passive:true});new ResizeObserver(()=>{t.scrollTo({left:index*t.clientWidth,behavior:'instant'});}).observe(t);})();"
+          script=soup.new_tag('script');script.string=js;soup.body.append(script)
+          logo=soup.select_one('.brand img')
+          logo['width']='228';logo['height']='312';logo['decoding']='async'
+          for node in soup.find_all(string=True):
+              if node.parent.name not in ['script','style'] and ('ВЕРСИЯ 17' in node or 'Демо-версия 17' in node):
+                  node.replace_with(str(node).replace('ВЕРСИЯ 17','ВЕРСИЯ 18').replace('Демо-версия 17','Демо-версия 18'))
+          css=c.read_text(encoding='utf-8')+'\n.reviews-carousel{min-width:0}.carousel-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.carousel-track::-webkit-scrollbar{display:none}.carousel-track>.guest-review{box-sizing:border-box;flex:0 0 100%;min-width:0;margin:0;scroll-snap-align:start;overflow-wrap:anywhere;padding:clamp(20px,3vw,36px)}.carousel-controls:not([hidden]){display:flex;align-items:center;justify-content:center;gap:20px;margin-top:18px}.carousel-btn{min-width:44px;min-height:44px;border:1px solid #c2a56a;border-radius:50%;background:transparent;color:#c2a56a;font-size:26px;cursor:pointer}.carousel-status{font-variant-numeric:tabular-nums}a:focus-visible,button:focus-visible,.carousel-track:focus-visible{outline:2px solid #c2a56a;outline-offset:4px}.grid>*,.contacts-grid>*{min-width:0}img{max-width:100%}.map{max-width:100%}@media(max-width:760px){.reviews .grid{grid-template-columns:minmax(0,1fr)}.actions{flex-wrap:wrap}.carousel-track>.guest-review p{font-size:18px;line-height:1.65}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}\n'
+          s=soup.decode(formatter='html')
+          parser=html5lib.HTMLParser(strict=False);parser.parse(s)
+          assert not parser.errors,parser.errors
+          json.loads(str(ld.string))
+          assert len(soup.select('.guest-review'))==6 and len(offers)==6
           root=Path.cwd().resolve()
           def embed(path):
               f=(root/path).resolve()
               assert f.is_relative_to(root/'assets') and f.is_file()
               return 'data:'+{'.woff':'font/woff','.png':'image/png'}[f.suffix]+';base64,'+base64.b64encode(f.read_bytes()).decode()
-          packed=re.sub(r'url\\((assets/[^)]+)\\)',lambda m:'url('+embed(m.group(1))+')',css)
-          preview=s.replace('<link rel="stylesheet" href="styles.css">','<style>'+packed+'</style>')
-          preview=re.sub(r'src="(assets/[^"]+)"',lambda m:'src="'+embed(m.group(1))+'"',preview)
-          assert 'src="assets/' not in preview and 'url(assets/' not in preview
+          packed=re.sub(r'url\((assets/[^)]+)\)',lambda m:'url('+embed(m.group(1))+')',css)
+          preview=BeautifulSoup(s,'html5lib')
+          link=preview.find('link',rel='stylesheet')
+          style=preview.new_tag('style');style.string=packed;link.replace_with(style)
+          for image in preview.find_all('img',src=True):
+              if image['src'].startswith('assets/'):image['src']=embed(image['src'])
+          final=preview.decode(formatter='html')
+          parser.parse(final);assert not parser.errors,parser.errors
+          p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
           Path('dist').mkdir(exist_ok=True)
-          Path('dist/alibi-preview.html').write_text(preview,encoding='utf-8')
+          Path('dist/alibi-preview.html').write_text(final,encoding='utf-8')
+          Path('dist/v18-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'reviews':6,'offers':6,'note':'HTML5 parsing checked; full conformance and browser layout require separate validation.'},ensure_ascii=False,indent=2),encoding='utf-8')
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html styles.css dist/alibi-preview.html
-          git commit -m 'Add review carousel, SEO metadata, structured data and valid responsive HTML'
+          git add index.html styles.css dist/alibi-preview.html dist/v18-validation.json
+          git commit -m 'Build v18 carousel, metadata and HTML5 parser report'
           git push origin HEAD:main
