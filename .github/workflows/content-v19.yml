@@ -1,4 +1,4 @@
-name: Alibi v19.2 demo cleanup and legal footer
+name: Alibi v19.3 demo cleanup and legal footer
 on:
   push:
     branches: [main]
@@ -24,11 +24,14 @@ jobs:
           if demo: demo.decompose()
           footer=soup.find('footer')
           assert footer is not None
-          version=footer.find('span',string=re.compile('Демо-версия',re.I))
-          version_removed=bool(version)
-          if version: version.decompose()
-          city=footer.find('span',string=re.compile('Краснодар'))
-          if city: city.decompose()
+          spans=footer.find_all('span')
+          version_removed=False
+          for span in spans:
+              if 'Демо-версия' in span.get_text():
+                  span.decompose();version_removed=True
+          for span in footer.find_all('span'):
+              if span.get_text(strip=True)=='Краснодар':
+                  span.decompose()
           legal=footer.find('div',class_='legal-details')
           if legal: legal.decompose()
           details=soup.new_tag('div',attrs={'class':'legal-details'})
