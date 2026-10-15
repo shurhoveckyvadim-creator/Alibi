@@ -1,0 +1,59 @@
+name: Build standalone HTML preview
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'styles.css', 'assets/**', '.github/workflows/build-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: alibi-preview-main
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble preview without changing source files
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, re, hashlib
+          root = Path.cwd().resolve()
+          source_paths = [Path('index.html'), Path('styles.css')] + [p for p in Path('assets').rglob('*') if p.is_file()]
+          before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}
+          html = Path('index.html').read_text(encoding='utf-8')
+          css = Path('styles.css').read_text(encoding='utf-8')
+          mime = {'.woff':'font/woff', '.woff2':'font/woff2', '.otf':'font/otf', '.ttf':'font/ttf', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp'}
+          def embed(path):
+              target = (root / path).resolve()
+              assert target.is_relative_to(root / 'assets'), 'Resource outside assets.'
+              assert target.is_file(), 'Missing resource: ' + path
+              assert target.suffix.lower() in mime, 'Unsupported resource: ' + path
+              return 'data:' + mime[target.suffix.lower()] + ';base64,' + base64.b64encode(target.read_bytes()).decode('ascii')
+          def css_resource(match):
+              quote, path = match.group(1), match.group(2)
+              return 'url(' + quote + embed(path) + quote + ')'
+          css = re.sub(r'url\(([\"\']?)(assets/[^)\"\']+)\1\)', css_resource, css)
+          link = '<link rel="stylesheet" href="styles.css">'
+          assert html.count(link) == 1, 'Expected exactly one stylesheet link.'
+          html = html.replace(link, '<style>' + css + '</style>')
+          def image_resource(match):
+              return match.group(1) + embed(match.group(2)) + match.group(3)
+          html = re.sub(r'(src=")((?:assets/)[^"]+)(")', image_resource, html)
+          assert 'href="styles.css"' not in html
+          assert 'src="assets/' not in html
+          assert not re.search(r'url\([\"\']?assets/', html)
+          assert before == {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}, 'Sources were modified.'
+          output = Path('dist/alibi-preview.html')
+          output.parent.mkdir(exist_ok=True)
+          output.write_text(html, encoding='utf-8')
+          assert output.stat().st_size > 0
+      - name: Save generated preview
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/alibi-preview.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Build standalone preview from current sources'
+          git push origin HEAD:main
