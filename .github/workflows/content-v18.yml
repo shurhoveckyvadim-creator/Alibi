@@ -1,0 +1,181 @@
+name: Alibi v18 carousel SEO and valid HTML
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/content-v18.yml']
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: python
+        run: |
+          from pathlib import Path
+          import re,html,json,base64
+          p,c=Path('index.html'),Path('styles.css')
+          s,css=p.read_text(encoding='utf-8'),c.read_text(encoding='utf-8')
+          assert '<title>Алиби — демо лендинга · v17</title>' in s
+          assert s.count('class="guest-review"')==6
+          def sub(a,b,n=1):
+              global s
+              assert s.count(a)==n,(a,s.count(a))
+              s=s.replace(a,b)
+          sub('<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#151e38"><title>Алиби — демо лендинга · v17</title><link rel="stylesheet" href="styles.css"></head><body>','''<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#151e38">
+<title>Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн</title>
+<meta name="description" content="Барбершоп Алиби в Краснодаре: мужские стрижки, оформление бороды и комбо. ул. Воронежская, 47/14, ЖК «Фонтаны». Запись онлайн ежедневно с 11:00 до 22:00.">
+<meta name="keywords" content="барбершоп Алиби, барбершоп Краснодар, мужская стрижка Краснодар, оформление бороды, стрижка и борода, ЖК Фонтаны">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Алиби">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн">
+<meta property="og:description" content="Мужские стрижки, оформление бороды и комбо в барбершопе Алиби. ул. Воронежская, 47/14, ЖК «Фонтаны». Запись онлайн с 11:00 до 22:00.">
+<meta property="og:url" content="https://shurhoveckyvadim-creator.github.io/Alibi/">
+<meta property="og:image" content="https://shurhoveckyvadim-creator.github.io/Alibi/assets/images/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Барбершоп Алиби в Краснодаре">
+<meta name="twitter:description" content="Стрижки, борода и комбо. Запись онлайн ежедневно с 11:00 до 22:00.">
+<link rel="canonical" href="https://shurhoveckyvadim-creator.github.io/Alibi/">
+<link rel="icon" href="assets/images/logo.png" type="image/png">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BarberShop",
+  "name": "Алиби",
+  "description": "Барбершоп Алиби в Краснодаре: мужские стрижки, оформление бороды и комбо.",
+  "url": "https://shurhoveckyvadim-creator.github.io/Alibi/",
+  "telephone": "+79615252549",
+  "image": "https://shurhoveckyvadim-creator.github.io/Alibi/assets/images/logo.png",
+  "priceRange": "₽₽",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "ул. Воронежская, 47/14, ЖК «Фонтаны»",
+    "addressLocality": "Краснодар",
+    "addressCountry": "RU"
+  },
+  "geo": {"@type": "GeoCoordinates", "latitude": 45.035554, "longitude": 38.975284},
+  "openingHoursSpecification": [{
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "opens": "11:00",
+    "closes": "22:00"
+  }],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Услуги барбершопа Алиби",
+    "itemListElement": [
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Мужская стрижка, младший барбер"}, "price": "1000", "priceCurrency": "RUB"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Оформление бороды, младший барбер"}, "price": "500", "priceCurrency": "RUB"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Стрижка и борода, младший барбер"}, "price": "1500", "priceCurrency": "RUB"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Мужская стрижка, старший барбер"}, "price": "1700", "priceCurrency": "RUB"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Оформление бороды, старший барбер"}, "price": "900", "priceCurrency": "RUB"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Стрижка и борода, старший барбер"}, "price": "2600", "priceCurrency": "RUB"}
+    ]
+  }
+}
+</script>
+</head>
+<body>''')
+          sub('<main>','<main id="main">')
+          sub('<div class="guest-reviews" aria-label="Отзывы гостей">','''<div class="reviews-carousel" aria-roledescription="карусель" aria-label="Отзывы гостей">
+<div class="carousel-frame">
+<div class="carousel-track" id="reviewsTrack" tabindex="0">''')
+          old='</div></div><section class="contacts-section"'
+          assert old in s
+          s=s.replace(old,'''</div>
+</div>
+<div class="carousel-controls">
+<button class="carousel-btn" type="button" data-direction="-1" aria-label="Предыдущий отзыв">‹</button>
+<div class="carousel-dots" role="tablist" aria-label="Выбор отзыва"></div>
+<button class="carousel-btn" type="button" data-direction="1" aria-label="Следующий отзыв">›</button>
+</div>
+</div>
+<script>
+(() => {
+  const track=document.getElementById('reviewsTrack');
+  const slides=[...track.children];
+  const dots=document.querySelector('.carousel-dots');
+  let index=0;
+  slides.forEach((slide,i)=>{
+    slide.setAttribute('role','group');
+    slide.setAttribute('aria-roledescription','слайд');
+    slide.setAttribute('aria-label','Отзыв '+(i+1)+' из '+slides.length);
+    const dot=document.createElement('button');
+    dot.type='button';dot.className='carousel-dot';dot.setAttribute('role','tab');
+    dot.setAttribute('aria-label','Показать отзыв '+(i+1));
+    dot.addEventListener('click',()=>go(i));
+    dots.append(dot);
+  });
+  const go=i=>{
+    index=(i+slides.length)%slides.length;
+    track.scrollTo({left:track.clientWidth*index,behavior:'smooth'});
+    [...dots.children].forEach((dot,j)=>dot.setAttribute('aria-selected',String(j===index)));
+  };
+  document.querySelectorAll('.carousel-btn').forEach(button=>button.addEventListener('click',()=>go(index+Number(button.dataset.direction))));
+  track.addEventListener('scroll',()=>{
+    const next=Math.round(track.scrollLeft/track.clientWidth);
+    if(next!==index){index=next;[...dots.children].forEach((dot,j)=>dot.setAttribute('aria-selected',String(j===index)));}
+  },{passive:true});
+  let startX=0;
+  track.addEventListener('pointerdown',event=>{startX=event.clientX;});
+  track.addEventListener('pointerup',event=>{
+    const delta=event.clientX-startX;
+    if(Math.abs(delta)>45)go(index+(delta<0?1:-1));
+  });
+  go(0);
+})();
+</script>
+<section class="contacts-section"''')
+          sub('<div class="demo">ДЕМО ЛЕНДИНГА · ВЕРСИЯ 17</div>','<div class="demo">ДЕМО ЛЕНДИНГА · ВЕРСИЯ 18</div>')
+          sub('<title>Алиби — демо лендинга · v17</title>','<title>Барбершоп Алиби в Краснодаре — стрижки, борода, запись онлайн</title>')
+          sub('<span>Краснодар · Демо-версия 17</span>','<span>Краснодар · Демо-версия 18</span>')
+          for old,new in [('<div class="wrap nav">','<nav class="wrap nav" aria-label="Основная навигация">'),('</div></header>','</nav></header>'),('<div class="wrap contacts-grid">','<div class="wrap contacts-grid" itemscope itemtype="https://schema.org/BarberShop">'),('<p class="value">Краснодар,<br>ул. Воронежская, 47/14 · ЖК «Фонтаны»</p>','<p class="value" itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="addressLocality">Краснодар</span>,<br><span itemprop="streetAddress">ул. Воронежская, 47/14 · ЖК «Фонтаны»</span></p>'),('<a class="value" href="tel:+79615252549">+7 961 525-25-49</a>','<a class="value" href="tel:+79615252549" itemprop="telephone">+7 961 525-25-49</a>')]:
+              sub(old,new)
+          css+='''
+          /* v18: single review carousel, SEO-ready layout and responsive refinements. */
+          .reviews-carousel{min-width:0;margin-top:32px}
+          .carousel-frame{position:relative;overflow:hidden;border:1px solid #c2a56a44;border-radius:18px;background:#1017291a}
+          .carousel-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+          .carousel-track::-webkit-scrollbar{display:none}
+          .guest-review{flex:0 0 100%;scroll-snap-align:center;margin:0;padding:clamp(24px,4vw,42px);border:0;background:transparent}
+          .guest-review p{margin:0;font-size:clamp(18px,2.2vw,23px);line-height:1.75;color:#f3f0e8}
+          .carousel-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:18px}
+          .carousel-btn{width:46px;height:46px;border:1px solid #c2a56a66;border-radius:50%;background:transparent;color:#c2a56a;font-size:26px;line-height:1;cursor:pointer;transition:background .2s,border-color .2s}
+          .carousel-btn:hover,.carousel-btn:focus-visible{background:#c2a56a14;border-color:#c2a56a}
+          .carousel-dots{display:flex;gap:9px}
+          .carousel-dot{width:10px;height:10px;padding:0;border:0;border-radius:50%;background:#ffffff33;cursor:pointer;transition:background .2s,transform .2s}
+          .carousel-dot[aria-selected="true"]{background:#c2a56a;transform:scale(1.2)}
+          @media(max-width:760px){.carousel-controls{gap:12px}.carousel-btn{width:42px;height:42px}.guest-review{padding:22px}}
+          @media(max-width:360px){.guest-review{padding:18px}.carousel-btn{width:38px;height:38px;font-size:22px}}
+          @media(prefers-reduced-motion:reduce){.carousel-track{scroll-behavior:auto}.carousel-btn,.carousel-dot{transition:none}}
+          '''
+          assert s.count('class="guest-review"')==6
+          assert 'application/ld+json' in s and 'name="description"' in s and 'carousel-track' in s
+          json.loads(re.search(r'<script type="application/ld\\+json">\\s*(.*?)\\s*</script>',s,re.S).group(1))
+          assert s.count('<section')==4 and s.count('</section>')==4
+          assert s.count('<div')==s.count('</div>')
+          p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
+          root=Path.cwd().resolve()
+          def embed(path):
+              f=(root/path).resolve()
+              assert f.is_relative_to(root/'assets') and f.is_file()
+              return 'data:'+{'.woff':'font/woff','.png':'image/png'}[f.suffix]+';base64,'+base64.b64encode(f.read_bytes()).decode()
+          packed=re.sub(r'url\\((assets/[^)]+)\\)',lambda m:'url('+embed(m.group(1))+')',css)
+          preview=s.replace('<link rel="stylesheet" href="styles.css">','<style>'+packed+'</style>')
+          preview=re.sub(r'src="(assets/[^"]+)"',lambda m:'src="'+embed(m.group(1))+'"',preview)
+          assert 'src="assets/' not in preview and 'url(assets/' not in preview
+          Path('dist').mkdir(exist_ok=True)
+          Path('dist/alibi-preview.html').write_text(preview,encoding='utf-8')
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html styles.css dist/alibi-preview.html
+          git commit -m 'Add review carousel, SEO metadata, structured data and valid responsive HTML'
+          git push origin HEAD:main
