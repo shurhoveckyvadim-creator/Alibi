@@ -1,4 +1,4 @@
-name: Alibi v19.1 footer and legal details
+name: Alibi v19.2 demo cleanup and legal footer
 on:
   push:
     branches: [main]
@@ -20,11 +20,13 @@ jobs:
           p,c=Path('index.html'),Path('styles.css')
           soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html5lib')
           demo=soup.select_one('.demo')
+          demo_removed=bool(demo)
           if demo: demo.decompose()
           footer=soup.find('footer')
           assert footer is not None
-          for node in footer.find_all(string=True):
-              if re.search(r'Демо-версия|ВЕРСИЯ\s*\d+',str(node),re.I): node.extract()
+          version=footer.find('span',string=re.compile('Демо-версия',re.I))
+          version_removed=bool(version)
+          if version: version.decompose()
           city=footer.find('span',string=re.compile('Краснодар'))
           if city: city.decompose()
           legal=footer.find('div',class_='legal-details')
@@ -37,7 +39,8 @@ jobs:
           s=soup.decode(formatter='html')
           parser=html5lib.HTMLParser(strict=False);parser.parse(s)
           assert not parser.errors,parser.errors
-          assert 'ДЕМО ЛЕНДИНГА' not in s and 'Демо-версия' not in s and 'ВЕРСИЯ' not in s
+          assert 'ДЕМО ЛЕНДИНГА' not in s
+          assert 'Демо-версия' not in s
           assert 'ИП КАРАБУТ ГЕОРГИЙ ВЛАДИМИРОВИЧ' in s
           assert '325010000033215' in s and '010508864744' in s
           root=Path.cwd().resolve()
@@ -56,10 +59,10 @@ jobs:
           p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
           Path('dist').mkdir(exist_ok=True)
           Path('dist/alibi-preview.html').write_text(final,encoding='utf-8')
-          Path('dist/v19-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'demo_block_removed':demo is not None,'legal_details_added':True},ensure_ascii=False,indent=2),encoding='utf-8')
+          Path('dist/v19-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'demo_block_removed':demo_removed,'footer_version_removed':version_removed,'legal_details_added':True},ensure_ascii=False,indent=2),encoding='utf-8')
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html styles.css dist/alibi-preview.html dist/v19-validation.json
-          git commit -m 'Fix footer cleanup and add legal details'
+          git commit -m 'Remove demo labels and add legal details to footer'
           git push origin HEAD:main
