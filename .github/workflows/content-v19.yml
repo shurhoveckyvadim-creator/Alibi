@@ -1,8 +1,9 @@
-name: Alibi v19.5 demo cleanup and legal footer
+name: Alibi v19.6 demo cleanup and legal footer
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/content-v19.yml']
+    paths: ['index.html','styles.css','assets/**','.github/workflows/content-v19.yml']
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -36,7 +37,7 @@ jobs:
           footer.append(details)
           css=c.read_text(encoding='utf-8')
           if '.legal-details' not in css:
-              css+='\n.footer-inner{align-items:flex-start;gap:28px}.legal-details{min-width:0;text-align:right;font-size:15px;line-height:1.6;color:#b7b7af}.legal-details p{margin:0}@media(max-width:760px){.footer-inner{flex-direction:column;align-items:center;gap:16px}.legal-details{text-align:center}}\n'
+              css+='\n.footer-inner{align-items:flex-start;gap:28px}.legal-details{min-width:0;text-align:right;font:15px/1.65 Arial,Helvetica,sans-serif;color:#b7b7af}.legal-details p{margin:0}@media(max-width:760px){.footer-inner{flex-direction:column;align-items:center;gap:16px}.legal-details{text-align:center}}\n'
           s=soup.decode(formatter='html')
           parser=html5lib.HTMLParser(strict=False);parser.parse(s)
           warnings=len(parser.errors)
@@ -63,5 +64,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html styles.css dist/alibi-preview.html dist/v19-validation.json
-          git diff --cached --quiet || git commit -m 'Clean demo labels and add legal details to footer'
+          git diff --cached --quiet || git commit -m 'Rebuild preview and validation report'
           git push origin HEAD:main
