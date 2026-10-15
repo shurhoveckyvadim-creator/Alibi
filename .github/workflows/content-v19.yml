@@ -1,0 +1,68 @@
+name: Alibi v19 footer and legal details
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/content-v19.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install beautifulsoup4==4.13.4 html5lib==1.1
+      - shell: python
+        run: |
+          from pathlib import Path
+          import re, json, base64
+          from bs4 import BeautifulSoup
+          import html5lib
+          p,c=Path('index.html'),Path('styles.css')
+          soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html5lib')
+          assert 'ВЕРСИЯ 18' in soup.get_text() or 'ВЕРСИЯ 17' in soup.get_text()
+          for node in list(soup.find_all(string=True)):
+              if node.parent.name in ['script','style']: continue
+              text=str(node)
+              if 'ДЕМО ЛЕНДИНГА' in text or 'Демо-версия' in text or 'ВЕРСИЯ 1' in text:
+                  node.extract()
+          footer=soup.find('footer')
+          assert footer is not None
+          old=footer.find('span',string=re.compile('Краснодар'))
+          if old: old.decompose()
+          legal=footer.find('div',class_='legal-details')
+          if legal: legal.decompose()
+          details=soup.new_tag('div',attrs={'class':'legal-details'})
+          details.append(soup.new_tag('p',string='ИП КАРАБУТ ГЕОРГИЙ ВЛАДИМИРОВИЧ'))
+          details.append(soup.new_tag('p',string='ОГРНИП 325010000033215'))
+          details.append(soup.new_tag('p',string='ИНН 010508864744'))
+          footer.append(details)
+          css=c.read_text(encoding='utf-8')+'\n.footer-inner{align-items:flex-start;gap:28px}.legal-details{min-width:0;text-align:right;font-size:15px;line-height:1.6;color:#b7b7af}.legal-details p{margin:0}@media(max-width:760px){.footer-inner{flex-direction:column;align-items:center;gap:16px}.legal-details{text-align:center}}\n'
+          s=soup.decode(formatter='html')
+          parser=html5lib.HTMLParser(strict=False);parser.parse(s)
+          assert not parser.errors,parser.errors
+          assert 'ДЕМО ЛЕНДИНГА' not in s and 'Демо-версия' not in s and 'ВЕРСИЯ 1' not in s
+          assert 'ИП КАРАБУТ ГЕОРГИЙ ВЛАДИМИРОВИЧ' in s
+          assert '325010000033215' in s and '010508864744' in s
+          root=Path.cwd().resolve()
+          def embed(path):
+              f=(root/path).resolve()
+              assert f.is_relative_to(root/'assets') and f.is_file()
+              return 'data:'+{'.woff':'font/woff','.png':'image/png'}[f.suffix]+';base64,'+base64.b64encode(f.read_bytes()).decode()
+          packed=re.sub(r'url\((assets/[^)]+)\)',lambda m:'url('+embed(m.group(1))+')',css)
+          preview=BeautifulSoup(s,'html5lib')
+          link=preview.find('link',rel='stylesheet')
+          style=preview.new_tag('style');style.string=packed;link.replace_with(style)
+          for image in preview.find_all('img',src=True):
+              if image['src'].startswith('assets/'):image['src']=embed(image['src'])
+          final=preview.decode(formatter='html')
+          parser.parse(final);assert not parser.errors,parser.errors
+          p.write_text(s,encoding='utf-8');c.write_text(css,encoding='utf-8')
+          Path('dist').mkdir(exist_ok=True)
+          Path('dist/alibi-preview.html').write_text(final,encoding='utf-8')
+          Path('dist/v19-validation.json').write_text(json.dumps({'html5_parser_errors':parser.errors,'demo_labels_removed':True,'legal_details_added':True},ensure_ascii=False,indent=2),encoding='utf-8')
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html styles.css dist/alibi-preview.html dist/v19-validation.json
+          git commit -m 'Remove demo labels and add legal details to footer'
+          git push origin HEAD:main
