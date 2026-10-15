@@ -47,3 +47,23 @@ nav{flex-basis:100%;justify-content:center;font-size:17px;gap:22px}
 .hero .actions>.btn{flex:1 1 145px;text-align:center}
 .hero .eyebrow{font-size:13px;letter-spacing:1.8px}
 }
+
+/* v17: confirmed prices, reviews and social links. */
+.price-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.price-group{min-width:0;padding:28px;border:1px solid #c2a56a55;border-radius:16px;background:#1017291a}
+.price-group h3{margin:0 0 18px;font:400 27px/1.35 'Renaissance',serif;color:#c2a56a}
+.price-line{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:16px;align-items:baseline;padding:17px 0;border-bottom:1px solid #ffffff20;font-size:21px;line-height:1.45;letter-spacing:.25px}
+.price-line:last-child{border-bottom:0}
+.price-amount{white-space:nowrap;color:#c2a56a;text-align:right;font-variant-numeric:tabular-nums}
+.price-explanation{font-size:16px;color:#b7b7af;margin-top:18px}
+.reviews>.grid{align-items:start}.guest-reviews{display:grid;gap:16px;min-width:0}
+.guest-review{margin:0;padding:24px 26px;border:1px solid #c2a56a44;border-radius:16px;background:#1017291a}
+.guest-review p{margin:0;max-width:none;font-size:18px;line-height:1.7;overflow-wrap:break-word}
+.header-address span:last-child{max-width:290px;text-align:right}
+.social-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.social-link{display:inline-flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid #c2a56a66;border-radius:12px;color:#c2a56a;font-size:16px;line-height:1.4;transition:background .2s,border-color .2s}
+.social-link svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.social-link:hover{background:#c2a56a14;border-color:#c2a56a;filter:none}
+@media(max-width:760px){.price-groups{grid-template-columns:1fr;gap:18px}.price-group{padding:22px}.price-group h3{font-size:25px}.price-line{font-size:20px;gap:12px}.guest-review{padding:22px}.header-address span:last-child{max-width:100%;text-align:center}.social-link{font-size:16px;padding:12px 14px}}
+@media(max-width:360px){.price-group{padding:18px}.price-line{font-size:19px;gap:10px}}
+@media(prefers-reduced-motion:reduce){.social-link{transition:none}}
