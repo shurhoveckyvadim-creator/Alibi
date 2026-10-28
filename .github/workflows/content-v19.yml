@@ -1,99 +1,11 @@
-name: Alibi footer repair and preview
+name: Alibi footer repair and preview (retired)
 on:
-  push:
-    branches: [main]
-    paths: ['index.html','styles.css','assets/**','.github/workflows/content-v19.yml']
   workflow_dispatch:
 permissions:
-  contents: write
-concurrency:
-  group: alibi-footer-main
-  cancel-in-progress: false
+  contents: read
 jobs:
-  build:
+  retired:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: python -m pip install beautifulsoup4==4.13.4 html5lib==1.1
-      - shell: python
-        run: |
-          from pathlib import Path
-          import re, json, base64
-          from bs4 import BeautifulSoup
-          import html5lib
-          p,c=Path('index.html'),Path('styles.css')
-          legal_lines=['ИП КАРАБУТ ГЕОРГИЙ ВЛАДИМИРОВИЧ','ОГРНИП 325010000033215','ИНН 010508864744']
-          def repair_html(raw):
-              soup=BeautifulSoup(raw,'html5lib')
-              footer=soup.select_one('body > footer')
-              assert footer is not None, 'Main footer missing'
-              for block in soup.select('.legal-details'):
-                  block.decompose()
-              container=footer.select_one('.footer-inner')
-              assert container is not None, 'Footer text container missing'
-              classes=container.get('class',[])
-              if 'wrap' not in classes:
-                  container['class']=['wrap']+classes
-              details=soup.new_tag('div',attrs={'class':'legal-details'})
-              for text in legal_lines:
-                  details.append(soup.new_tag('p',string=text))
-              container.append(details)
-              assert len(soup.select('.legal-details'))==1
-              assert not soup.select('.guest-review .legal-details')
-              assert [x.get_text() for x in details.find_all('p')]==legal_lines
-              assert details.parent is container
-              return soup.decode(formatter='html')
-          footer_css='''/* BEGIN footer repair */
-          body > footer{padding:28px 0 30px;border-top:0;background:#101729;color:#b7b7af;overflow:hidden;letter-spacing:0}
-          body > footer .footer-inner{display:flex;flex-direction:column;align-items:flex-start;gap:0}
-          body > footer .legal-details{position:relative;align-self:stretch;min-width:0;margin:20px 0 0;padding:18px 0 0;text-align:left;font:13px/1.6 Arial,Helvetica,sans-serif;letter-spacing:0;color:#b7b7af}
-          body > footer .legal-details::before{content:'';position:absolute;top:0;left:50%;width:100vw;margin-left:-50vw;border-top:1px solid #ffffff18}
-          body > footer .legal-details p{margin:0;max-width:none;letter-spacing:0}
-          .guest-review > .review-author{display:block;position:relative;margin:14px 0 0;padding:13px 0 0;border:0;background:transparent;color:#e2dfd6;font-size:15px;line-height:1.4;letter-spacing:0;overflow:visible;text-align:left}
-          .guest-review > .review-author::before{content:'';position:absolute;top:0;left:0;width:28px;height:1px;background:#c2a56a}
-          @media(max-width:760px){body > footer{padding-bottom:95px}}
-          /* END footer repair */'''
-          def repair_css(css):
-              css=re.sub(r'/\* BEGIN footer repair \*/.*?/\* END footer repair \*/','',css,flags=re.S)
-              css=re.sub(r'(?<![\w.>\-])(?:body\s*>\s*)*footer(?=\s*[{,])','body > footer',css)
-              return css.rstrip()+'\n\n'+footer_css+'\n'
-          source=p.read_text(encoding='utf-8')
-          s=repair_html(source)
-          css=repair_css(c.read_text(encoding='utf-8'))
-          assert repair_html(s)==s, 'HTML repair must be idempotent'
-          assert repair_css(css)==css, 'CSS repair must be idempotent'
-          old=BeautifulSoup(source,'html5lib')
-          new=BeautifulSoup(s,'html5lib')
-          assert [x.get_text() for x in old.select('.guest-review > p')]==[x.get_text() for x in new.select('.guest-review > p')]
-          assert old.select_one('iframe.map')['src']==new.select_one('iframe.map')['src']
-          assert [str(x) for x in old.select('h1,h2,h3,.price-line')]==[str(x) for x in new.select('h1,h2,h3,.price-line')]
-          parser=html5lib.HTMLParser(strict=False)
-          parser.parse(s)
-          root=Path.cwd().resolve()
-          mime={'.woff':'font/woff','.woff2':'font/woff2','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml'}
-          def embed(path):
-              f=(root/path).resolve()
-              assert f.is_relative_to(root/'assets') and f.is_file(),path
-              return 'data:'+mime[f.suffix.lower()]+';base64,'+base64.b64encode(f.read_bytes()).decode()
-          packed=re.sub(r'url\([\'"]?(assets/[^)\'"]+)[\'"]?\)',lambda m:'url('+embed(m.group(1))+')',css)
-          preview=BeautifulSoup(s,'html5lib')
-          link=preview.find('link',rel='stylesheet')
-          assert link is not None
-          style=preview.new_tag('style')
-          style.string=packed
-          link.replace_with(style)
-          for image in preview.find_all('img',src=True):
-              if image['src'].startswith('assets/'):
-                  image['src']=embed(image['src'])
-          p.write_text(s,encoding='utf-8')
-          c.write_text(css,encoding='utf-8')
-          Path('dist').mkdir(exist_ok=True)
-          Path('dist/alibi-preview.html').write_text(preview.decode(formatter='html'),encoding='utf-8')
-          report={'html5lib_warnings':len(parser.errors),'legal_details_count':1,'reviews_contain_legal_details':False,'legal_details_in_page_container':True,'footer_styles_scoped':True,'repair_idempotent':True,'browser_checked':False,'build_status':'passed_with_warnings' if parser.errors else 'passed'}
-          Path('dist/v19-validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-      - run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html styles.css dist/alibi-preview.html dist/v19-validation.json
-          git diff --cached --quiet || git commit -m 'fix: repair legal footer and review authors; rebuild preview'
-          git push origin HEAD:main
+      - run: echo 'Retired. Legal footer and review author styles are maintained in source files.'
