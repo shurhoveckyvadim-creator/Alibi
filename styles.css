@@ -81,3 +81,40 @@ body > footer .legal-details p{margin:0;max-width:none;letter-spacing:0}
 .guest-review > .review-author::before{content:'';position:absolute;top:0;left:0;width:28px;height:1px;background:#c2a56a}
 @media(max-width:760px){body > footer{padding-bottom:95px}}
 /* END footer repair */
+
+/* BEGIN responsive hero booking */
+:root{--site-header-height:140px}
+.hero{min-height:calc(100vh - var(--site-header-height));min-height:calc(100svh - var(--site-header-height));display:flex;align-items:center;padding:clamp(32px,6vh,72px) 0;overflow:visible}
+.hero > .wrap{width:100%;display:flex;flex-direction:column;gap:clamp(24px,4vh,40px)}
+.hero-copy{width:100%;max-width:850px;min-width:0}
+.hero h1{font-size:clamp(46px,5.6vw,76px);line-height:1.08;margin:0 0 24px;letter-spacing:-.025em;overflow-wrap:break-word}
+.hero .eyebrow{margin:0 0 20px;max-width:100%;line-height:1.6}
+.hero p{margin:0 0 16px;max-width:620px}
+.hero .intro{font-size:21px;line-height:1.6}
+.hero .actions{margin-top:24px;gap:12px}
+.hero .actions > .btn{min-width:0;white-space:normal;text-align:center}
+.hero .benefits{margin:0;justify-content:flex-start;flex-wrap:wrap;gap:12px 28px;text-align:left}
+.hero .benefits li{font-size:clamp(18px,2vw,26px);line-height:1.5}
+a.btn.mobile[hidden]{display:none!important}
+@media(min-width:761px) and (max-width:1100px){.nav{flex-wrap:wrap;row-gap:12px}.header-address{margin-left:auto}}
+@media(max-width:760px){
+  :root{--site-header-height:190px}
+  .nav{padding:12px 0;row-gap:8px}
+  .nav nav{flex-wrap:wrap;column-gap:clamp(12px,4vw,22px);row-gap:0;font-size:15px}
+  .nav nav a{display:inline-flex;align-items:center;min-height:44px}
+  .header-address{font-size:15px;line-height:1.4;gap:2px 8px}
+  .header-address span:first-child{font-size:14px}
+  .hero{padding:28px 0 32px}
+  .hero > .wrap{gap:24px}
+  .hero h1{font-size:clamp(36px,8.2vw,58px);margin-bottom:20px}
+  .hero .eyebrow{font-size:12px;letter-spacing:1.2px;margin-bottom:16px}
+  .hero p{font-size:17px;line-height:1.6;margin-bottom:12px}
+  .hero .intro{font-size:19px;line-height:1.55}
+  .hero .actions{margin-top:20px;gap:10px}
+  .hero .actions > .btn{flex:1 1 145px;font-size:15px;padding:12px 14px;min-height:48px}
+  .hero .benefits{column-gap:18px;row-gap:8px}
+  .hero .benefits li{font-size:clamp(13px,3.4vw,18px);gap:5px}
+  a.btn.mobile{bottom:calc(12px + env(safe-area-inset-bottom,0px));left:16px;right:16px;min-height:48px}
+}
+@media(max-height:600px) and (min-width:761px){.hero{padding:28px 0}.hero h1{font-size:clamp(42px,5vw,60px)}}
+/* END responsive hero booking */

@@ -1,0 +1,6 @@
+{
+  "booking_targets": 4,
+  "sticky_initially_hidden": true,
+  "browser_checked": false,
+  "checks": "static only"
+}
